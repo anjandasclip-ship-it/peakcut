@@ -78,6 +78,17 @@ def _what_changed(here: str):
     return int(d.get("ahead_by") or 0), notes[:20]
 
 
+def _has_commit(sha: str) -> bool:
+    if not sha or not re.fullmatch(r"[0-9a-f]{40}", sha):
+        return False
+    try:
+        import subprocess
+        return subprocess.run(["git", "merge-base", "--is-ancestor", sha, "HEAD"],
+                              capture_output=True, timeout=2).returncode == 0
+    except Exception:
+        return False
+
+
 def check(force: bool = False):
     """Look once. Returns what the dashboard should say, or None when this copy is up to date (or it cannot be told)."""
     if not ON:
@@ -92,7 +103,7 @@ def check(force: bool = False):
             top = newest() if here else ""
         except Exception:  # noqa: BLE001 - offline: what was known stays, and it is asked again in a minute
             return _state["result"]
-        if not top or top == here:
+        if not top or top == here or _has_commit(top):
             _state.update(result=None, seen=top)
             return None
         if top != _state["seen"] or _state["notes"] is None:      # a commit not seen before: ask what it brought, once

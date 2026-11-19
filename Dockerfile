@@ -18,7 +18,6 @@ ENV PEAKCUT_DATA=/data \
     PEAKCUT_PORT=8765 \
     PEAKCUT_TRUST_PROXY=1 \
     PYTHONUNBUFFERED=1
-VOLUME /data
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s CMD python -c "import os, urllib.request; p = os.environ.get('PORT') or os.environ.get('PEAKCUT_PORT') or '8765'; urllib.request.urlopen(f'http://127.0.0.1:{p}/healthz', timeout=4)"
 # the first start downloads the speech model into /data/models by itself (about 480 MB)

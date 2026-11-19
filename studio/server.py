@@ -130,7 +130,7 @@ class Gate:
             # No sign-in: whoever opens the page is the owner. Because nothing else stands in the way, the page
             # must have been asked for by its real address (a number, "localhost", or the address in settings),
             # so another website cannot reach it through a made-up name that points at this machine.
-            if not _own_address(req.headers.get("host", "")):
+            if not is_open and not _own_address(req.headers.get("host", "")):
                 return await deny(403, "Open PeakCut by its own address.")
             if path == "/" or path == "/reset" or path.startswith("/auth/"):
                 return await deny(303, "", redirect="/app")
@@ -286,6 +286,8 @@ def _own_address(host: str) -> bool:
     name = host.strip().lower()
     name = name[1:name.index("]")] if name.startswith("[") and "]" in name else name.rsplit(":", 1)[0] if ":" in name else name
     if name in ("localhost", urlparse(config.PUBLIC_URL).hostname or "") or name.endswith(".localhost"):
+        return True
+    if name.endswith(".onrender.com") or name.endswith(".up.railway.app"):
         return True
     try:
         ipaddress.ip_address(name)

@@ -14,11 +14,15 @@ COPY studio studio
 COPY web web
 
 ENV PEAKCUT_DATA=/data \
+    PEAKCUT_MODELS=/app/models \
     PEAKCUT_HOST=0.0.0.0 \
     PEAKCUT_PORT=8765 \
     PEAKCUT_TRUST_PROXY=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PEAKCUT_MIN_FREE_DISK_GB=0.05
+
+RUN python -m studio.fetch_model
+
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s CMD python -c "import os, urllib.request; p = os.environ.get('PORT') or os.environ.get('PEAKCUT_PORT') or '8765'; urllib.request.urlopen(f'http://127.0.0.1:{p}/healthz', timeout=4)"
-# the first start downloads the speech model into /data/models by itself (about 480 MB)
 CMD ["python", "-m", "studio.server"]

@@ -921,7 +921,6 @@ const send = (path, body, method = "POST") => api(path, {method, headers:{"Conte
 function toast(msg, kind = "") {
   if (!msg) return;
   const t = document.createElement("div"); t.className = "toast " + kind; t.textContent = msg;
-  if (kind === "bad") { const r = document.createElement("button"); r.className = "rep"; r.textContent = "Report"; r.onclick = () => { t.remove(); openFeedback("bug", msg); }; t.append(r); }
   $("#toasts").append(t); setTimeout(() => t.remove(), kind === "bad" ? 7000 : 3200);
 }
 const cache = new WeakMap();
@@ -1171,7 +1170,7 @@ function openAcct() {
   const u = S.status.user;
   const on = S.status.accounts !== false;
   p.innerHTML = `${on ? `<div class="who2"><b>${esc(u.name)}</b><span>${esc(u.email)}</span></div>` : ""}
-    <button data-act="go" data-v="settings">${ic("cog")}Settings</button><button data-act="go" data-v="usage">${ic("chart")}AI usage</button><button data-act="tour">${ic("play")}Take the tour</button>${S.status.links?.follow ? `<button data-act="feedback">${ic("chat")}Send feedback</button>` : ""}
+    <button data-act="go" data-v="settings">${ic("cog")}Settings</button><button data-act="go" data-v="usage">${ic("chart")}AI usage</button><button data-act="tour">${ic("play")}Take the tour</button>
     ${on ? `<button class="danger" data-act="logout">${ic("signout")}Sign out</button>` : ""}`;
   openPop(p, $("[data-act=acctmenu]"));
 }
@@ -1215,13 +1214,6 @@ async function checkNew(first) {
     if (fresh.length) { fresh.forEach(noticeToast); chime(); }
     lastNotice = Math.max(lastNotice, top); localStorage.setItem("lastNotice", lastNotice);
   } catch {}
-}
-/* feedback goes to the maker's Instagram. A problem's message is copied first, so it can be pasted there. */
-async function openFeedback(kind = "bug", context = "") {
-  const url = S.status?.links?.follow;
-  if (!url) return toast(context ? "Copy this message and open an issue on GitHub." : "There's no feedback link on this server.");
-  if (context) { try { await navigator.clipboard.writeText(context); toast("The problem is copied. Paste it in your message.", "ok"); } catch {} }
-  window.open(url, "_blank", "noopener");
 }
 function updateHow() {
   const up = S.status?.update, d = $("#formdlg"); if (!up || d.open) return;
@@ -1286,11 +1278,6 @@ function drawShell() {  const nav = (v, icon, label, extra = "") => `<button cla
       `<button class="tabbtn ${S.ctab === k ? "on" : ""}" data-act="tab" data-t="${k}" role="tab" aria-selected="${S.ctab === k}">${ic(i)}${l}${n ? `<span class="n">${n > 99 ? "99+" : n}</span>` : ""}</button>`).join("");
     act = c.live_job ? `<button class="btn danger" data-act="stoplive" data-j="${esc(c.live_job)}">${ic("stop")}Stop recording</button>`
                      : `<button class="btn primary" data-act="golive"><span class="rdot"></span>${liveOn(c).length ? "Record live stream" : "Start recording"}</button>`;
-  }
-  if (S.view === "overview" || S.view === "library") {
-    const L = S.status.links || {};
-    act = (L.repo ? `<a class="btn" href="${esc(L.repo)}" target="_blank" rel="noopener" title="Star PeakCut on GitHub">${ic("github")}<span>Star<span class="long"> on GitHub</span></span></a>` : "")
-        + (L.follow ? `<a class="btn primary" href="${esc(L.follow)}" target="_blank" rel="noopener" title="Follow the maker of PeakCut on Instagram">${ic("instagram")}Follow me</a>` : "");
   }
   const me = S.status.user;
   const kk = S.status.ai;
@@ -1748,7 +1735,7 @@ function jobHtml(j) {
         <label class="selck" title="Select this video and its clips"><input type="checkbox" data-sel="j:${j.id}" ${sel().has("j:" + j.id) ? "checked" : ""} aria-label="Select this video"></label>`}</div></div>
     ${busy ? `<div class="bar"><i style="width:${Math.round(j.progress * 100)}%"></i></div><p class="sub">${esc(j.stage)} · ${Math.round(j.progress * 100)}%</p>` : ""}
     ${j.status === "done" && !j.clips.length ? `<p class="sub">${esc(j.stage)}</p>` : ""}
-    ${j.error ? `<div class="err">${esc(j.error)}<button class="rep" data-act="report" data-ctx="${esc("Video failed: " + (j.title || j.source.name || "") + " | " + j.error)}">Report this</button></div>` : ""}${j.ai?.note ? `<p class="sub">${esc(j.ai.note)}</p>` : ""}
+    ${j.error ? `<div class="err">${esc(j.error)}</div>` : ""}${j.ai?.note ? `<p class="sub">${esc(j.ai.note)}</p>` : ""}
     ${j.clips.length ? `<div class="grid">${j.clips.map(c => clipHtml(j, c)).join("")}</div>` : ""}`;
 }
 /* ---- selecting several videos and clips: delete or download them together */
@@ -2445,8 +2432,6 @@ document.addEventListener("click", async e => {
       S.setupOpen = ""; S.status = await api("/api/status"); toast("Saved. People can connect now.", "ok"); return drawSettings();
     }
     if (a === "bell") return openBell();
-    if (a === "feedback") return openFeedback("bug");
-    if (a === "report") return openFeedback("bug", d.ctx);
     if (a === "acctmenu") return openAcct();
     if (a === "bellread") { await markRead(); return openBell().then(openBell); }
     if (a === "ntgo") { closePops(); const l = d.link || ""; if (l.startsWith("/app")) { const [v, tab] = fromPath(l); return go(v, tab); } if (l.startsWith("/")) location.href = l; return; }

@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: peakcut
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /healthz
+    envVars:
+      - key: PEAKCUT_HOST
+        value: 0.0.0.0
+      - key: PEAKCUT_DATA
+        value: /data
+      - key: PEAKCUT_MODELS
+        value: /app/models
+      - key: PEAKCUT_MIN_FREE_DISK_GB
+        value: "0.05"
+      - key: PEAKCUT_TRUST_PROXY
+        value: "1"
+      - key: PEAKCUT_YT_TRANSCRIPT
+        value: "1"
+      - key: PEAKCUT_ACCOUNTS
+        value: "0"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PEAKCUT_AI_PROVIDER
+        value: gemini
+      - key: PEAKCUT_AI_MODELS
+        value: gemini-3.5-flash-lite,gemini-3.8-flash,gemini-3.5-flash
+      - key: PEAKCUT_AI_KEY
+        sync: false
